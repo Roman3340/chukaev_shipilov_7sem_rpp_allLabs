@@ -1,2 +1,5 @@
 .idea/
 .env
+
+labs/lab5/__pycache__/
+labs/lab5/venv/
