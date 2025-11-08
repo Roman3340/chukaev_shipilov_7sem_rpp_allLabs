@@ -86,6 +86,35 @@ def login():
 
     return render_template('login.html')
 
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute('SELECT * FROM users WHERE email = %s', (email,))
+        if cur.fetchone():
+            cur.close()
+            conn.close()
+            return "Пользователь уже существует"
+
+        cur.execute(
+            'INSERT INTO users (email, password, name) VALUES (%s, %s, %s)',
+            (email, password, name)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return redirect('/login')
+
+    return render_template('signup.html')
+
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
