@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, request
-from flask_login import LoginManager, UserMixin, login_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user
 import psycopg2
 import os
 from dotenv import load_dotenv
@@ -114,6 +114,12 @@ def signup():
         return redirect('/login')
 
     return render_template('signup.html')
+
+@app.route('/logout')
+def logout():
+    if current_user.is_authenticated:
+        logout_user()
+    return redirect('/login')
 
 if __name__ == '__main__':
     init_db()
