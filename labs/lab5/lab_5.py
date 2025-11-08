@@ -1,5 +1,5 @@
-from flask import Flask
-from flask_login import LoginManager, UserMixin
+from flask import Flask, render_template, redirect, url_for
+from flask_login import LoginManager, UserMixin, current_user
 import psycopg2
 import os
 from dotenv import load_dotenv
@@ -41,6 +41,12 @@ def init_db():
     cur.close()
     conn.close()
 
+@app.route('/')
+def index():
+    if current_user.is_authenticated:
+        return render_template('index.html')
+    else:
+        return redirect(url_for('login'))
 
 if __name__ == '__main__':
     init_db()
