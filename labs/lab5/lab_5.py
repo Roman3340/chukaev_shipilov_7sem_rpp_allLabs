@@ -1,5 +1,5 @@
-from flask import Flask, render_template, redirect, url_for
-from flask_login import LoginManager, UserMixin, current_user
+from flask import Flask, render_template, redirect, url_for, request
+from flask_login import LoginManager, UserMixin, login_user, current_user
 import psycopg2
 import os
 from dotenv import load_dotenv
@@ -41,12 +41,50 @@ def init_db():
     cur.close()
     conn.close()
 
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+    user_data = cur.fetchone()
+    cur.close()
+    conn.close()
+    if user_data:
+        return User(user_data[0], user_data[1], user_data[2], user_data[3])
+    return None
+
 @app.route('/')
 def index():
     if current_user.is_authenticated:
         return render_template('index.html')
     else:
         return redirect(url_for('login'))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM users WHERE email = %s', (email,))
+        user_data = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not user_data:
+            return "Пользователь не найден"
+
+        if user_data[2] != password:
+            return "Неверный пароль"
+
+        user = User(user_data[0], user_data[1], user_data[2], user_data[3])
+        login_user(user)
+        return redirect('/')
+
+    return render_template('login.html')
 
 if __name__ == '__main__':
     init_db()
