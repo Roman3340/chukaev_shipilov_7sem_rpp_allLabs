@@ -3,6 +3,7 @@ from flask_login import LoginManager, UserMixin, login_user, current_user, logou
 import psycopg2
 import os
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
 
@@ -34,7 +35,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email VARCHAR(100) UNIQUE NOT NULL,
-            password VARCHAR(100) NOT NULL,
+            password VARCHAR(255) NOT NULL,
             name VARCHAR(100) NOT NULL
         )
     ''')
@@ -81,7 +82,7 @@ def login():
 
         if not user_data:
             error = "Пользователь не найден"
-        elif user_data[2] != password:
+        elif not check_password_hash(user_data[2], password):
             error = "Неверный пароль"
         else:
             user = User(user_data[0], user_data[1], user_data[2], user_data[3])
@@ -114,7 +115,7 @@ def signup():
         else:
             cur.execute(
                 'INSERT INTO users (email, password, name) VALUES (%s, %s, %s)',
-                (email, password, name)
+                (email, generate_password_hash(password), name)
             )
             conn.commit()
             cur.close()
