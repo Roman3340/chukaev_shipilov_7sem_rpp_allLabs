@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Балансировщик загрузки</title>
+</head>
+<body>
+    <h1>Балансировщик загрузки</h1>
+
+    {% if error_message %}
+        <div style="color: red;">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+    <h2>Добавить инстанс</h2>
+    <form action="/add_instance" method="POST">
+        IP: <input type="text" name="ip" value="localhost" required><br>
+        Port: <input type="number" name="port" required><br>
+        <button type="submit">Добавить инстанс</button>
+    </form>
+
+    <h2>Инастансы</h2>
+    <table border="1">
+        <tr>
+            <th>IP</th>
+            <th>Порт</th>
+            <th>Статус</th>
+            <th>Действие</th>
+        </tr>
+        {% for instance in instances %}
+        <tr>
+            <td>{{ instance.ip }}</td>
+            <td>{{ instance.port }}</td>
+            <td>
+                {% if instance in active_instances %}
+                    Доступен
+                {% else %}
+                    Не доступен
+                {% endif %}
+            </td>
+            <td>
+                <form action="/remove_instance" method="POST">
+                    <input type="hidden" name="index" value="{{ loop.index0 }}">
+                    <button type="submit">Удалить</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

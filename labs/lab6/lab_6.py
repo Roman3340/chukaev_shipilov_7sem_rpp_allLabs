@@ -19,7 +19,7 @@ def health():
 def process():
     return jsonify({
         'instance_id': instance_id,
-        'message': 'Запрос обработан'
+        'message': 'Request processed'
     })
 
 
@@ -38,3 +38,6 @@ if __name__ == '__main__':
 
     app.config['PORT'] = port
     app.run(host='0.0.0.0', port=port, debug=False)
+
+
+
