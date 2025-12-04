@@ -130,21 +130,6 @@ def remove_instance():
     check_instances_health()
     return redirect('/')
 
-
-@app.route('/<path:path>', methods=['GET'])
-def catch_all(path):
-    instance = get_next_instance()
-
-    if not instance:
-        return jsonify({'error': 'No available instances'}), 503
-
-    try:
-        response = requests.get(f"http://{instance['ip']}:{instance['port']}/{path}", timeout=5)
-        return jsonify(response.json()), response.status_code
-    except Exception as e:
-        return jsonify({'error': f'Error: {e}'}), 502
-
-
 @app.route('/')
 def mainFunc():
     global error_message
@@ -154,6 +139,26 @@ def mainFunc():
     return render_template('index.html', instances=instances,
                            active_instances=active_instances,
                            error_message=error_to_show)
+
+@app.route('/<path:path>')
+def catch_all(path):
+    instance = get_next_instance()
+
+    if not instance:
+        return jsonify({'error': 'No available instances'}), 503
+
+    try:
+        response = requests.get(f"http://{instance['ip']}:{instance['port']}/{path}", timeout=5)
+        if response.status_code == 404:
+            return jsonify({
+                'error': f'Route /{path} not found on instance {instance["ip"]}:{instance["port"]}'
+            }), 404
+        try:
+            return jsonify(response.json()), response.status_code
+        except ValueError:
+            return response.text, response.status_code
+    except Exception as e:
+        return jsonify({'error': f'Error: {e}'}), 502
 
 
 if __name__ == '__main__':
