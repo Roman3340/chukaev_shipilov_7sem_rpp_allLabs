@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Key-Value Store</title>
+    <style>
+        .error { color: red; }
+        .success { color: green; }
+        .form-group { margin: 15px 0; }
+        input { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Key-Value Store</h1>
+
+    <!-- 1. Форма для добавления -->
+    <h2>Добавить ключ-значение</h2>
+    <form action="/set_form" method="POST" class="form-group">
+        Ключ: <input type="text" name="key"><br>
+        Значение: <input type="text" name="value"><br>
+        <input type="submit" value="Добавить">
+    </form>
+
+    <!-- 2. Форма для получения -->
+    <h2>Получить значение</h2>
+    <form action="/get_form" method="GET" class="form-group">
+        Ключ: <input type="text" name="key"><br>
+        <input type="submit" value="Получить">
+    </form>
+
+    <!-- 3. Форма для проверки -->
+    <h2>Проверить наличие</h2>
+    <form action="/exists_form" method="GET" class="form-group">
+        Ключ: <input type="text" name="key"><br>
+        <input type="submit" value="Проверить">
+    </form>
+
+    <!-- 4. Форма для удаления -->
+    <h2>Удалить ключ</h2>
+    <form action="/delete_form" method="POST" class="form-group">
+        Ключ: <input type="text" name="key"><br>
+        <input type="submit" value="Удалить">
+    </form>
+
+    <!-- Отображение результата последней операции -->
+    {% if result %}
+        <div class="{{ 'success' if result.status == 'ok' else 'error' }}">
+            <h3>Результат:</h3>
+            <p>
+                {{ result.message }}
+            </p>
+        </div>
+    {% endif %}
+</body>
+</html>
