@@ -8,14 +8,14 @@ limiter = Limiter(get_remote_address, app=app, default_limits=["100 per day"])
 
 # Загружаем данные
 try:
-    with open('data.json') as f:
+    with open('../data.json') as f:
         data = json.load(f)
 except:
     data = {}
 
 
 def save():
-    with open('data.json', 'w') as f:
+    with open('../data.json', 'w') as f:
         json.dump(data, f)
 
 
