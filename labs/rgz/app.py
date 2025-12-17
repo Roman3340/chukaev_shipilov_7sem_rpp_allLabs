@@ -10,7 +10,7 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('flask_secret', 'secret-key')
 
-# Подключение к базе
+# Подключение к базе данных
 def get_db():
     conn = psycopg2.connect(
         host='localhost',
