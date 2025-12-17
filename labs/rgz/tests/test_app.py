@@ -1,14 +1,10 @@
 import json
-import sys
 import os
 import uuid
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-#
-# from app import app
 from ..app import app
 
 
@@ -155,7 +151,6 @@ def test_delete_subscription():
                                })
         sub_data = json.loads(response.data)
         sub_id = sub_data['id']
-
         response = client.delete(f'/api/subscriptions/{sub_id}',
                                  json={'user_id': user_id})
         assert response.status_code == 200
@@ -163,6 +158,5 @@ def test_delete_subscription():
         response = client.get(f'/api/subscriptions?user_id={user_id}')
         data = json.loads(response.data)
         assert len(data['subscriptions']) == 0
-
     finally:
         cleanup_test_user(username)
