@@ -60,7 +60,7 @@ def test_register_and_login():
                                json={'username': username, 'password': 'testpass'})
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert data['message'] == 'Вход выполнен'
+        assert data['message'] == 'Login successful'
         assert data['user_id'] == user_id
 
     finally:
