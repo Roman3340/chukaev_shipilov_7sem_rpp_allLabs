@@ -1,10 +1,14 @@
-name: CI Pipeline
+name: RGZ CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'rgz/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'rgz/**'
 
 jobs:
   test:
@@ -28,20 +32,21 @@ jobs:
     - name: Install PostgreSQL client
       run: sudo apt-get install -y postgresql-client
     
-    - name: Install dependencies
+    - name: Install Python dependencies
+      working-directory: ./rgz
       run: |
         pip install -r requirements.txt
         pip install pytest bandit
     
     - name: Setup test database
       run: |
-        # Ждем немного чтобы PostgreSQL успел запуститься
-        sleep 5
+        # Даем PostgreSQL время запуститься
+        sleep 3
         
-        # Создаем базу
+        # Создаем базу данных
         PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE subscriptions_db;"
         
-        # Создаем пользователя flask_user
+        # Создаем пользователя для приложения
         PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE USER flask_user WITH PASSWORD 'flask_password';"
         
         # Даем права
@@ -49,6 +54,7 @@ jobs:
         
         # Создаем таблицы
         PGPASSWORD=postgres psql -h localhost -U postgres -d subscriptions_db -c "
+          -- Создаем таблицы (как в manage.sh)
           CREATE TABLE IF NOT EXISTS users (
               id SERIAL PRIMARY KEY,
               username VARCHAR(80) UNIQUE NOT NULL,
@@ -73,14 +79,18 @@ jobs:
               details TEXT
           );
           
+          -- Даем права пользователю flask_user
           GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO flask_user;
           GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO flask_user;
         "
+        echo "✅ Test database setup completed"
     
-    - name: Run security check
+    - name: Run security check with Bandit
+      working-directory: ./rgz
       run: bandit -r app.py tests/
     
-    - name: Run unit tests
+    - name: Run unit tests with Pytest
+      working-directory: ./rgz
       env:
         RGZ_DB_PASSWORD: flask_password
       run: python -m pytest tests/ -v
