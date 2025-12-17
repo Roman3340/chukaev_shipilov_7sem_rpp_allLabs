@@ -1,0 +1,96 @@
+name: RGZ CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'rgz/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'rgz/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install PostgreSQL client
+      run: sudo apt-get install -y postgresql-client
+    
+    - name: Install Python dependencies
+      working-directory: ./rgz
+      run: |
+        pip install -r requirements.txt
+        pip install pytest bandit
+    
+    - name: Setup test database
+      run: |
+        # Даем PostgreSQL время запуститься
+        sleep 3
+        
+        # Создаем базу данных
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE subscriptions_db;"
+        
+        # Создаем пользователя для приложения
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE USER flask_user WITH PASSWORD 'flask_password';"
+        
+        # Даем права
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE subscriptions_db TO flask_user;"
+        
+        # Создаем таблицы
+        PGPASSWORD=postgres psql -h localhost -U postgres -d subscriptions_db -c "
+          -- Создаем таблицы (как в manage.sh)
+          CREATE TABLE IF NOT EXISTS users (
+              id SERIAL PRIMARY KEY,
+              username VARCHAR(80) UNIQUE NOT NULL,
+              password_hash VARCHAR(200) NOT NULL,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+          
+          CREATE TABLE IF NOT EXISTS subscriptions (
+              id SERIAL PRIMARY KEY,
+              name VARCHAR(100) NOT NULL,
+              amount DECIMAL(10,2) NOT NULL,
+              periodicity VARCHAR(20) NOT NULL,
+              start_date DATE NOT NULL,
+              user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+          );
+          
+          CREATE TABLE IF NOT EXISTS audit_log (
+              id SERIAL PRIMARY KEY,
+              user_id INTEGER REFERENCES users(id),
+              action VARCHAR(50) NOT NULL,
+              timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              details TEXT
+          );
+          
+          -- Даем права пользователю flask_user
+          GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO flask_user;
+          GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO flask_user;
+        "
+        echo "✅ Test database setup completed"
+    
+    - name: Run security check with Bandit
+      working-directory: ./rgz
+      run: bandit -r app.py tests/
+    
+    - name: Run unit tests with Pytest
+      working-directory: ./rgz
+      env:
+        RGZ_DB_PASSWORD: flask_password
+      run: python -m pytest tests/ -v
