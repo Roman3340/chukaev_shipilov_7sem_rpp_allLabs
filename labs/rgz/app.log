@@ -65,3 +65,19 @@ Press CTRL+C to quit
 127.0.0.1 - - [17/Dec/2025 17:30:42] "POST /api/register HTTP/1.1" 201 -
 127.0.0.1 - - [17/Dec/2025 17:30:54] "POST /api/subscriptions HTTP/1.1" 201 -
 127.0.0.1 - - [17/Dec/2025 17:32:08] "PUT /api/subscriptions/1 HTTP/1.1" 200 -
+ * Detected change in 'C:\\Users\\Admin\\Desktop\\all\\Ucheba\\4kurs\\7semestr\\RPP\\4laba\\labs\\rgz\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 119-936-695
+ * Detected change in 'C:\\Users\\Admin\\Desktop\\all\\Ucheba\\4kurs\\7semestr\\RPP\\4laba\\labs\\rgz\\tests\\test_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 119-936-695
+ * Detected change in 'C:\\Users\\Admin\\Desktop\\all\\Ucheba\\4kurs\\7semestr\\RPP\\4laba\\labs\\rgz\\tests\\test_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 119-936-695
+ * Detected change in 'C:\\Users\\Admin\\Desktop\\all\\Ucheba\\4kurs\\7semestr\\RPP\\4laba\\labs\\rgz\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 119-936-695
