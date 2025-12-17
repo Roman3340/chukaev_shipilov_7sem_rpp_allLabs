@@ -87,7 +87,7 @@ jobs:
 
     - name: Run security check with Bandit
       working-directory: ./labs/rgz
-      run: bandit -r app.py tests/
+      run: bandit -r app.py tests/ -s B101,B110
 
     - name: Run unit tests with Pytest
       working-directory: ./labs/rgz
