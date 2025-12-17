@@ -108,7 +108,7 @@ def create_subscription():
     periodicity = data.get('periodicity')
     start_date = data.get('start_date')
 
-    # Проверяем что все нужные поля есть
+    # Проверяем что все поля есть
     if not all([user_id, name, amount, periodicity, start_date]):
         return jsonify({'error': 'All fields are required: user_id, name, amount, periodicity, start_date'}), 400
 
