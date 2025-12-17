@@ -92,5 +92,6 @@ jobs:
     - name: Run unit tests with Pytest
       working-directory: ./labs/rgz
       env:
-        RGZ_DB_PASSWORD: flask_password
+        rgz_db_password: ${{ secrets.RGZ_DB_PASSWORD }}
+        flask_secret: ${{ secrets.FLASK_SECRET }}
       run: python -m pytest tests/ -v
