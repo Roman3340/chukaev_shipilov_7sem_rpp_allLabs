@@ -16,7 +16,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_PASSWORD: postgres
         ports:
@@ -39,51 +39,23 @@ jobs:
         pip install pytest bandit
 
     - name: Setup test database
+      working-directory: ./labs/rgz
+      env:
+        DB_HOST: localhost
+        DB_ADMIN_USER: postgres
+        DB_ADMIN_PASS: postgres
+        DB_NAME: subscriptions_db
+        DB_APP_USER: flask_user
+        DB_APP_PASS: flask_password
       run: |
-        # Даем PostgreSQL время запуститься
-        sleep 3
-        
-        # Создаем базу данных
-        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE subscriptions_db;"
-        
-        # Создаем пользователя для приложения
-        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE USER flask_user WITH PASSWORD 'flask_password';"
-        
-        # Даем права
-        PGPASSWORD=postgres psql -h localhost -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE subscriptions_db TO flask_user;"
-        
-        # Создаем таблицы
-        PGPASSWORD=postgres psql -h localhost -U postgres -d subscriptions_db -c "
-          -- Создаем таблицы (как в manage.sh)
-          CREATE TABLE IF NOT EXISTS users (
-              id SERIAL PRIMARY KEY,
-              username VARCHAR(80) UNIQUE NOT NULL,
-              password_hash VARCHAR(200) NOT NULL,
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-          );
+        sleep 5
           
-          CREATE TABLE IF NOT EXISTS subscriptions (
-              id SERIAL PRIMARY KEY,
-              name VARCHAR(100) NOT NULL,
-              amount DECIMAL(10,2) NOT NULL,
-              periodicity VARCHAR(20) NOT NULL,
-              start_date DATE NOT NULL,
-              user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
-          );
+        chmod +x manage.sh
           
-          CREATE TABLE IF NOT EXISTS audit_log (
-              id SERIAL PRIMARY KEY,
-              user_id INTEGER REFERENCES users(id),
-              action VARCHAR(50) NOT NULL,
-              timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-              details TEXT
-          );
+        echo "start database setup"
+        ./manage.sh setup_db
           
-          -- Даем права пользователю flask_user
-          GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO flask_user;
-          GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO flask_user;
-        "
-        echo "✅ Test database setup completed"
+        echo "Database ready"
 
     - name: Run security check with Bandit
       working-directory: ./labs/rgz

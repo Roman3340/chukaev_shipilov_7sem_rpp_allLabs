@@ -2,21 +2,91 @@
 
 echo "=== Менеджер подписок API ==="
 
+#setup_database() {
+#    echo "Настройка базы данных PostgreSQL..."
+#
+#    PSQL_PATH="/c/Program Files/PostgreSQL/16/bin/psql.exe"
+#
+#    export PGPASSWORD='123'
+#
+#    echo "Создание базы данных..."
+#    "$PSQL_PATH" -U postgres -h localhost -c "CREATE DATABASE subscriptions_db;" 2>/dev/null || echo "База данных уже существует"
+#
+#    echo "Создание пользователя..."
+#    "$PSQL_PATH" -U postgres -h localhost -c "CREATE USER flask_user WITH PASSWORD 'flask_password';" 2>/dev/null || echo "Пользователь уже существует"
+#
+#    echo "Назначение прав..."
+#    "$PSQL_PATH" -U postgres -h localhost -c "GRANT ALL PRIVILEGES ON DATABASE subscriptions_db TO flask_user;"
+#
+#    echo "Создание таблиц..."
+#
+#    SQL="
+#    CREATE TABLE IF NOT EXISTS users (
+#        id SERIAL PRIMARY KEY,
+#        username VARCHAR(80) UNIQUE NOT NULL,
+#        password_hash VARCHAR(200) NOT NULL,
+#        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+#    );
+#
+#    CREATE TABLE IF NOT EXISTS subscriptions (
+#        id SERIAL PRIMARY KEY,
+#        name VARCHAR(100) NOT NULL,
+#        amount DECIMAL(10,2) NOT NULL,
+#        periodicity VARCHAR(20) NOT NULL,
+#        start_date DATE NOT NULL,
+#        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+#    );
+#
+#    CREATE TABLE IF NOT EXISTS audit_log (
+#        id SERIAL PRIMARY KEY,
+#        user_id INTEGER REFERENCES users(id),
+#        action VARCHAR(50) NOT NULL,
+#        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#        details TEXT
+#    );
+#    "
+#
+#    echo "$SQL" | "$PSQL_PATH" -U postgres -h localhost -d subscriptions_db
+#
+#    # Даем права на последовательности
+#    "$PSQL_PATH" -U postgres -h localhost -d subscriptions_db -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO flask_user;"
+#    "$PSQL_PATH" -U postgres -h localhost -d subscriptions_db -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO flask_user;"
+#
+#    echo "База данных настроена!"
+#}
+
 setup_database() {
     echo "Настройка базы данных PostgreSQL..."
 
-    PSQL_PATH="/c/Program Files/PostgreSQL/16/bin/psql.exe"
+    # Определяем окружение
+    if [ -n "$GITHUB_ACTIONS" ]; then
+        PSQL_PATH="psql"
+        DB_PASSWORD='postgres'
+        echo "Режим: CI/CD (GitHub Actions)"
+    else
+        PSQL_PATH="/c/Program Files/PostgreSQL/16/bin/psql.exe"
+        DB_PASSWORD='123'
+        echo "Режим: Локальный (Windows)"
+    fi
 
-    export PGPASSWORD='123'
+    DB_HOST="${DB_HOST:-localhost}"
+    DB_ADMIN_USER="${DB_ADMIN_USER:-postgres}"
+    DB_ADMIN_PASS="${DB_ADMIN_PASS:-$DB_PASSWORD}"
+    DB_NAME="${DB_NAME:-subscriptions_db}"
+    DB_APP_USER="${DB_APP_USER:-flask_user}"
+    DB_APP_PASS="${DB_APP_PASS:-flask_password}"
 
-    echo "Создание базы данных..."
-    "$PSQL_PATH" -U postgres -h localhost -c "CREATE DATABASE subscriptions_db;" 2>/dev/null || echo "База данных уже существует"
+    export PGPASSWORD="$DB_ADMIN_PASS"
+
+
+    echo "🗄Создание базы данных..."
+    "$PSQL_PATH" -h "$DB_HOST" -U "$DB_ADMIN_USER" -c "CREATE DATABASE $DB_NAME;" 2>/dev/null || echo "База данных уже существует"
 
     echo "Создание пользователя..."
-    "$PSQL_PATH" -U postgres -h localhost -c "CREATE USER flask_user WITH PASSWORD 'flask_password';" 2>/dev/null || echo "Пользователь уже существует"
+    "$PSQL_PATH" -h "$DB_HOST" -U "$DB_ADMIN_USER" -c "CREATE USER $DB_APP_USER WITH PASSWORD '$DB_APP_PASS';" 2>/dev/null || echo "Пользователь уже существует"
 
     echo "Назначение прав..."
-    "$PSQL_PATH" -U postgres -h localhost -c "GRANT ALL PRIVILEGES ON DATABASE subscriptions_db TO flask_user;"
+    "$PSQL_PATH" -h "$DB_HOST" -U "$DB_ADMIN_USER" -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_APP_USER;"
 
     echo "Создание таблиц..."
 
@@ -44,13 +114,13 @@ setup_database() {
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         details TEXT
     );
+
+    -- Даем права пользователю flask_user
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_APP_USER;
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO $DB_APP_USER;
     "
 
-    echo "$SQL" | "$PSQL_PATH" -U postgres -h localhost -d subscriptions_db
-
-    # Даем права на последовательности
-    "$PSQL_PATH" -U postgres -h localhost -d subscriptions_db -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO flask_user;"
-    "$PSQL_PATH" -U postgres -h localhost -d subscriptions_db -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO flask_user;"
+    echo "$SQL" | "$PSQL_PATH" -h "$DB_HOST" -U "$DB_ADMIN_USER" -d "$DB_NAME"
 
     echo "База данных настроена!"
 }
