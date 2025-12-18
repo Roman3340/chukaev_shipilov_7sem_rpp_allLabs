@@ -151,28 +151,33 @@ stop_app() {
 run_tests() {
     echo "Запуск тестов..."
 
-    # Простая проверка
-    if [ ! -d "venv" ]; then
-        echo "Ошибка: Выполните сначала ./manage.sh install"
-        exit 1
-    fi
+    # Определяем окружение
+    if [ -n "$GITHUB_ACTIONS" ]; then
+        # CI/CD - зависимости уже установлены
+        echo "CI/CD режим, пропускаем активацию venv"
+    elif [ -d "venv" ]; then
+        # Локально с venv
+        if [ -f "venv/bin/activate" ]; then
+            source venv/bin/activate
+        else
+            source venv/Scripts/activate
+        fi
 
-    if [ -f "venv/bin/activate" ]; then
-        source venv/bin/activate
+        pip install pytest 2>/dev/null || true
     else
-        source venv/Scripts/activate
+        # Локально без venv
+        echo "Предупреждение: venv не найден, используем глобальный Python"
+        pip install pytest 2>/dev/null || true
     fi
-
-    # Установка pytest
-    pip install pytest 2>/dev/null || true
 
     # Запуск тестов
     echo "Выполнение тестов..."
     if python -m pytest tests/ -v; then
-        echo "Тесты пройдены успешно"
+        echo "✅ Тесты пройдены успешно"
+        return 0
     else
-        echo "Тесты завершились с ошибками"
-        exit 1
+        echo "❌ Тесты завершились с ошибками"
+        return 1
     fi
 }
 
