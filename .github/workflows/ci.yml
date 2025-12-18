@@ -61,9 +61,9 @@ jobs:
       working-directory: ./labs/rgz
       run: bandit -r app.py tests/ -s B101,B110
 
-    - name: Run unit tests with Pytest
+    - name: Run unit tests
       working-directory: ./labs/rgz
       env:
         rgz_db_password: ${{ secrets.RGZ_DB_PASSWORD }}
         flask_secret: ${{ secrets.FLASK_SECRET }}
-      run: python -m pytest tests/ -v
+      run: ./manage.sh test
