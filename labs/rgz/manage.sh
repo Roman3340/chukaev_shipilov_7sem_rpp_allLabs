@@ -79,7 +79,7 @@ setup_database() {
     export PGPASSWORD="$DB_ADMIN_PASS"
 
 
-    echo "🗄Создание базы данных..."
+    echo "Создание базы данных..."
     "$PSQL_PATH" -h "$DB_HOST" -U "$DB_ADMIN_USER" -c "CREATE DATABASE $DB_NAME;" 2>/dev/null || echo "База данных уже существует"
 
     echo "Создание пользователя..."
