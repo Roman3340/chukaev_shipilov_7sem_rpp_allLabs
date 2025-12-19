@@ -140,11 +140,6 @@ stop_app() {
         rm -f app.pid
     else
         echo "Файл PID не найден"
-        if tasklist //FI "PID eq $(cat app.pid 2>/dev/null)" 2>/dev/null | grep -q "python.exe"; then
-            echo "Приложение запущено, останавливаю..."
-        else
-            echo "Приложение не запущено"
-        fi
     fi
 }
 
